@@ -1,0 +1,172 @@
+---
+title: "SDS 313 HW"
+author: "Samuel Li"
+date: "4/14/25"
+output: pdf_document
+
+---
+
+[https://github.com/SamuelLi1225/SDS-HW8](https://github.com/SamuelLi1225/SDS-HW8) 
+
+```{r echo=FALSE}
+creatinine <- read.csv("creatinine.csv")
+
+model <- lm(creatclear ~ age, data = creatinine)
+
+#1.A
+summary(model)
+147.81292 - (0.61982 * 55) 
+
+
+#1.B Slope of the regression line
+
+summary(model)
+
+#1.C
+res_40 <- 135 - predict(model, newdata = data.frame(age = 40))
+res_60 <- 112 - predict(model, newdata = data.frame(age = 60))
+
+res_40
+res_60
+
+
+
+```
+#1.A
+
+From the model, the y intercept was 147.81292 and the slope was -0.61982, so i subtracted the intercept by 55 times the slope to predict the levels for 55 year olds. My prediction was 113.7228
+
+#1.B
+
+The model states that the slope is -0.61892. Creatinine clearance decreases by about 0.62 ml/min per year.
+
+#1.C
+
+The 40 year old has a residual of 11.97972 and the 60 year old has a residual of 1.376035. This means that the 40 year old is predicted to be healthier as he has a higher residual. 
+
+
+```{r echo = FALSE}
+library(mosaic)
+library(ggplot2)
+
+#1,2
+covid <- read.csv("covid.csv")
+covid <- subset(covid, deaths > 0)
+covid$log_deaths <- log(covid$deaths)
+
+
+
+italy <- subset(covid, country == "Italy")
+spain <- subset(covid, country == "Spain")
+
+model_italy <- lm(log_deaths ~ days_since_first_death, data = italy)
+model_spain <- lm(log_deaths ~ days_since_first_death, data = spain)
+summary(model_italy)
+summary(model_spain)
+
+doubling_italy <- log(2) / 0.18322
+doubling_spain <- log(2) / 0.27624
+
+
+
+doubling_italy
+doubling_spain
+
+
+#CI 
+
+# ITALY
+boot_italy <- do(1000) * 
+  coef(lm(log_deaths ~ days_since_first_death, data = resample(italy)))[[2]]
+
+ci_growth_italy <- quantile(boot_italy[[1]], c(0.025, 0.975), na.rm = TRUE)
+ci_doubling_italy <- log(2) / ci_growth_italy
+
+# SPAIN
+boot_spain <- do(1000) * 
+  coef(lm(log_deaths ~ days_since_first_death, data = resample(spain)))[[2]]
+
+ci_growth_spain <- quantile(boot_spain[[1]], c(0.025, 0.975), na.rm = TRUE)
+ci_doubling_spain <- log(2) / ci_growth_spain
+
+
+
+ci_growth_italy
+ci_doubling_italy
+ci_growth_spain
+ci_doubling_spain
+
+
+
+#2.3
+
+
+library(ggplot2)
+
+# Load and clean the data if not already done
+covid <- read.csv("covid.csv")
+covid <- subset(covid, deaths > 0)  
+
+ggplot(covid, aes(x = days_since_first_death, y = deaths, color = country)) +
+  geom_line(size = 1) +
+  labs(
+    title = "Reported COVID-19 Deaths Over Time",
+    x = "Days Since First Death",
+    y = "Daily Deaths"
+  ) +
+  theme_minimal() +
+  theme(legend.title = element_blank())
+
+
+
+
+```
+
+#2.1
+
+Italy Growth Rate: 0.183, deaths increased by 18.3% a day 
+Italy Doubling Time: About 3.8 days to double 
+95% Bootstrapped CI: 
+We are 95% confident that the true growth rate is between [0.160, 0.209]
+We are 95% confident that the true doubling time is between [4.4, 3.4]
+
+#2.2
+Spain Growth Rate: 0.276, deaths increased by 27.6% a day 
+Spain Doubling Time: About 2.5 days to double 
+95% Bootstrapped CI: 
+We are 95% confident that the true growth rate is between [0.232, 0.317]
+We are 95% confident that the true doubling time is between [3.0, 2.2]
+
+```{r echo = FALSE}
+library(mosaic)
+milk <- read.csv("milk.csv")
+milk <- subset(milk, price > 0 & sales > 0)
+milk$log_price <- log(milk$price)
+milk$log_sales <- log(milk$sales)
+
+model <- lm(log_sales ~ log_price, data = milk)
+elasticity <- coef(model)[2]
+
+boot <- do(1000) * {
+  data.frame(slope = coef(lm(log_sales ~ log_price, data = resample(milk)))[2])
+}
+
+elasticities <- boot$slope
+elasticities <- elasticities[!is.na(elasticities)]
+ci <- quantile(elasticities, c(0.025, 0.975))
+
+elasticity
+ci
+
+
+
+
+
+
+```
+
+#3
+log(sales) ~ log(price) was my equation.
+The estimated price elasticity demand is about -1.62, this means a 1% increase in milk price leads to approximately a 1.62% decrease in sales. This suggests that milk demand is elastic.
+
+95% confidence interval of [-1.77, -1.45] elasticity estimate.
